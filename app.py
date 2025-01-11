@@ -54,6 +54,7 @@ def login():
 
 #TODO: We need to mint an nft when the user uploads a file
 
+
 #TODO: Check the status when we send a mint request
 
 #TODO: Update the metadata of a token
