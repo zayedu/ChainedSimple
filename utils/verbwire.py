@@ -4,13 +4,13 @@ import requests
 from dotenv import load_dotenv
 from pprint import pprint
 
-# Load environment variables (VERBWIRE_API_KEY, etc.)
+# Load environment variables
 load_dotenv()
 VERBWIRE_API_KEY = os.getenv("VERBWIRE_API_KEY")
 
 VERBWIRE_BASE_URL = "https://api.verbwire.com/v1"
 
-#### ENDPOINTS ####
+# Endpoints
 MINT_FROM_METADATA_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/mint/quickMintFromMetadata"
 TRANSACTION_DETAILS_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/userOps/transactionDetails"
 OWNED_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/data/owned"
@@ -20,7 +20,9 @@ NFT_DETAILS_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/data/nftDetails"
 
 
 def mint_nft_from_metadata_url(metadata_url, wallet_address, chain="sepolia"):
-
+    """
+    Mints an NFT from a metadata URL using Verbwire's quickMintFromMetadataUrl endpoint.
+    """
     quickMintFromMetadataUrl_endpoint = f"{VERBWIRE_BASE_URL}/nft/mint/quickMintFromMetadataUrl"
 
     form_data = {
@@ -47,7 +49,9 @@ def mint_nft_from_metadata_url(metadata_url, wallet_address, chain="sepolia"):
 
 def get_wallet_nfts(wallet_address, chain="sepolia", token_type="nft721",
                     sort_direction="ASC", limit=1000, page=1):
-
+    """
+    Retrieves all NFTs owned by the specified wallet using Verbwire's /nft/data/owned
+    """
     headers = {
         "X-API-Key": VERBWIRE_API_KEY,
         "accept": "application/json"
@@ -73,7 +77,9 @@ def get_wallet_nfts(wallet_address, chain="sepolia", token_type="nft721",
 
 
 def check_transaction_status(transaction_id):
-
+    """
+    Checks the status of a transaction using Verbwire's transactionDetails endpoint.
+    """
     headers = {
         "X-API-Key": VERBWIRE_API_KEY,
         "accept": "application/json",
@@ -94,7 +100,9 @@ def check_transaction_status(transaction_id):
 
 
 def update_nft_metadata(contract_address, token_id, new_token_uri, chain="sepolia"):
-
+    """
+    Updates the metadata of an NFT on-chain using the /update/updateTokenMetadata endpoint.
+    """
     headers = {
         "accept": "application/json",
         "X-API-Key": VERBWIRE_API_KEY
@@ -118,7 +126,10 @@ def update_nft_metadata(contract_address, token_id, new_token_uri, chain="sepoli
 
 
 def upload_file_to_ipfs(file_path):
-
+    """
+    Uploads a local file to IPFS using Verbwire's store/file endpoint.
+    Typically used for images or JSON metadata.
+    """
     headers = {
         "X-API-Key": VERBWIRE_API_KEY,
         "accept": "application/json"
@@ -132,6 +143,46 @@ def upload_file_to_ipfs(file_path):
         json_resp = response.json()
         pprint(json_resp)  # For debugging
         return json_resp
+    except Exception:
+        return {
+            "error": "Failed to parse JSON from Verbwire response.",
+            "raw": response.text
+        }
+
+def get_nft_details(contract_address, token_id, chain="sepolia", populate_metadata=True):
+    """
+    Fetches detailed info about a specific NFT, including on-chain metadata if populateMetadata=true.
+    Returns a dict like:
+    {
+      "nft_details": {
+        "name": "...",
+        "symbol": "...",
+        "ownerOf": "...",
+        "metadata": {
+          "name": "...",
+          "description": "...",
+          "image": "...",
+          ...
+        }
+      }
+    }
+    or { "error": "..." } if something goes wrong.
+    """
+    headers = {
+        "X-API-Key": VERBWIRE_API_KEY,
+        "accept": "application/json"
+    }
+
+    params = {
+        "contractAddress": contract_address,
+        "tokenId": token_id,
+        "chain": chain,
+        "populateMetadata": "true" if populate_metadata else "false"
+    }
+
+    response = requests.get(NFT_DETAILS_ENDPOINT, headers=headers, params=params)
+    try:
+        return response.json()
     except Exception:
         return {
             "error": "Failed to parse JSON from Verbwire response.",
