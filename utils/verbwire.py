@@ -16,6 +16,7 @@ VERBWIRE_BASE_URL = "https://api.verbwire.com/v1"
 
 MINT_FROM_METADATA_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/mint/quickMintFromMetadata"
 OWNED_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/data/owned"
+TRANSACTION_DETAILS_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/userOps/transactionDetails"
 
 def mint_nft_from_metadata_url(metadata_url, wallet_address, chain="sepolia"):
     """
@@ -72,3 +73,24 @@ def get_wallet_nfts(wallet_address, chain="sepolia", token_type="nft721",
             "raw": response.text
         }
 
+def check_transaction_status(transaction_id):
+    """
+    Checks the status of a transaction using Verbwire's transactionDetails endpoint.
+    """
+    headers = {
+        "X-API-Key": VERBWIRE_API_KEY,
+        "accept": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    data = {
+        "transactionId": transaction_id
+    }
+
+    response = requests.post(TRANSACTION_DETAILS_ENDPOINT, headers=headers, data=data)
+    try:
+        return response.json()
+    except Exception:
+        return {
+            "error": "Failed to parse JSON from Verbwire response.",
+            "raw": response.text
+        }
