@@ -7,7 +7,6 @@ app = Flask(__name__)
 
 load_dotenv()
 VERBWIRE_API_KEY = os.getenv("VERBWIRE_API_KEY")
-pprint(VERBWIRE_API_KEY)
 @app.route('/')
 def hello_world():  # put application's code here
     return 'Hello World!'
