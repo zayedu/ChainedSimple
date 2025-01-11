@@ -52,7 +52,6 @@ def login():
         "nfts": nfts_list
     }), 200
 
-#TODO: We need to mint an nft when the user uploads a file
 
 @app.route('/mint_file_nft', methods=['POST'])
 def mint_file_nft():
@@ -128,7 +127,6 @@ def mint_file_nft():
         "mint_response": mint_resp
     }), 200
 
-#TODO: Check the status when we send a mint request
 @app.route('/check_status', methods=['POST'])
 def check_status():
 
@@ -143,9 +141,27 @@ def check_status():
     return jsonify(resp), 200
 
 
-#TODO: Update the metadata of a token
+@app.route('/update_metadata', methods=['POST'])
+def update_metadata_endpoint():
+    data = request.get_json()
+    contract_address = data.get("contract_address")
+    token_id = data.get("token_id")
+    new_token_uri = data.get("new_token_uri")
+    chain = data.get("chain", "sepolia")
 
+    if not contract_address or not token_id or not new_token_uri:
+        return jsonify({
+            "error": "contract_address, token_id, and new_token_uri are required"
+        }), 400
 
+    resp = update_nft_metadata(
+        contract_address=contract_address,
+        token_id=token_id,
+        new_token_uri=new_token_uri,
+        chain=chain
+    )
+    pprint(resp)
+    return jsonify(resp), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
