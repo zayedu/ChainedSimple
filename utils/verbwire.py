@@ -8,21 +8,19 @@ from pprint import pprint
 load_dotenv()
 VERBWIRE_API_KEY = os.getenv("VERBWIRE_API_KEY")
 
-pprint(VERBWIRE_API_KEY)
-
 VERBWIRE_BASE_URL = "https://api.verbwire.com/v1"
 
-#Endpoints (just minting an nft for rn)
-
+#### ENDPOINTS ####
 MINT_FROM_METADATA_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/mint/quickMintFromMetadata"
-OWNED_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/data/owned"
 TRANSACTION_DETAILS_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/userOps/transactionDetails"
+OWNED_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/data/owned"
 UPDATE_METADATA_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/update/updateTokenMetadata"
+STORE_FILE_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/store/file"
+NFT_DETAILS_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/data/nftDetails"
+
 
 def mint_nft_from_metadata_url(metadata_url, wallet_address, chain="sepolia"):
-    """
-    use quick mint from metadata url endpoint to mint an NFT and associate with users wallet address
-    """
+
     quickMintFromMetadataUrl_endpoint = f"{VERBWIRE_BASE_URL}/nft/mint/quickMintFromMetadataUrl"
 
     form_data = {
@@ -45,12 +43,11 @@ def mint_nft_from_metadata_url(metadata_url, wallet_address, chain="sepolia"):
             "error": "Failed to parse JSON from Verbwire response.",
             "raw": response.text
         }
+
+
 def get_wallet_nfts(wallet_address, chain="sepolia", token_type="nft721",
                     sort_direction="ASC", limit=1000, page=1):
-    """
-    Retrieves all NFTs owned by the specified wallet using Verbwire's /nft/data/owned.
-    Defaults to chain=sepolia, tokenType=nft721, ASC sort, limit=1000.
-    """
+
     headers = {
         "X-API-Key": VERBWIRE_API_KEY,
         "accept": "application/json"
@@ -74,10 +71,9 @@ def get_wallet_nfts(wallet_address, chain="sepolia", token_type="nft721",
             "raw": response.text
         }
 
+
 def check_transaction_status(transaction_id):
-    """
-    Checks the status of a transaction using Verbwire's transactionDetails endpoint.
-    """
+
     headers = {
         "X-API-Key": VERBWIRE_API_KEY,
         "accept": "application/json",
@@ -96,10 +92,9 @@ def check_transaction_status(transaction_id):
             "raw": response.text
         }
 
+
 def update_nft_metadata(contract_address, token_id, new_token_uri, chain="sepolia"):
-    """
-    Updates the metadata of an NFT using the Verbwire API (updateTokenMetadata).
-    """
+
     headers = {
         "accept": "application/json",
         "X-API-Key": VERBWIRE_API_KEY
@@ -115,6 +110,28 @@ def update_nft_metadata(contract_address, token_id, new_token_uri, chain="sepoli
     response = requests.post(UPDATE_METADATA_ENDPOINT, headers=headers, data=payload)
     try:
         return response.json()
+    except Exception:
+        return {
+            "error": "Failed to parse JSON from Verbwire response.",
+            "raw": response.text
+        }
+
+
+def upload_file_to_ipfs(file_path):
+
+    headers = {
+        "X-API-Key": VERBWIRE_API_KEY,
+        "accept": "application/json"
+    }
+
+    with open(file_path, "rb") as f:
+        files = {"filePath": f}
+        response = requests.post(STORE_FILE_ENDPOINT, headers=headers, files=files)
+
+    try:
+        json_resp = response.json()
+        pprint(json_resp)  # For debugging
+        return json_resp
     except Exception:
         return {
             "error": "Failed to parse JSON from Verbwire response.",
