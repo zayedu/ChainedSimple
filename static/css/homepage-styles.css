@@ -36,19 +36,7 @@ line-height: normal;
 margin-left: 10px;
 }
 
-.leftButtonHome {
-width: 150px;
-height: 80px;
-margin-left: 10px;
-margin-bottom: 20px;
-border-radius: 10px;
-background: #C41F3E;
-display: flex;
-justify-content: center; /* Center the text horizontally */
-align-items: center; /* Center the text vertically */
-color: white; /* Text color */
-font-size: 18px; /* Text size */
-}
+
 
 .leftButton {
     width: 150px;
