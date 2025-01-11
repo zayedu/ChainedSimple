@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Documents</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Your Documents</h1>
+        {% if error %}
+            <p class="error-message">{{ error }}</p>
+        {% elif success %}
+            <p class="success-message">File uploaded successfully!</p>
+            <ul>
+                <li><strong>File Name:</strong> {{ success.fileName or 'N/A' }}</li>
+                <li>
+                    <strong>IPFS URL:</strong> 
+                    <a href="{{ success.ipfsUrl }}" target="_blank">{{ success.ipfsUrl }}</a>
+                </li>
+            </ul>
+        {% endif %}
+        <form method="POST" action="{{ url_for('upload_page') }}" enctype="multipart/form-data">
+            <label for="file">Select Document:</label>
+            <input type="file" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.png" required>
+            <button type="submit">Upload</button>
+        </form>
+        <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+    </div>
+</body>
+</html>

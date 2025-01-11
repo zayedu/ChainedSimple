@@ -1,39 +1,88 @@
 from pprint import pprint
-from flask import Flask, request, jsonify, redirect
-from flask_cors import CORS
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+from utils.verbwire import get_wallet_nfts, update_nft_metadata
 import os
-import json
-import time
-from datetime import datetime
 
-# Import Verbwire helper functions
+# Import the refactored Verbwire helper functions
 from utils.verbwire import (
     mint_nft_from_metadata_url,
     get_wallet_nfts,
     check_transaction_status,
     update_nft_metadata,
-    upload_file_to_ipfs,
-    get_nft_details  # <-- We import this to fetch the NFT's metadata
+    upload_file_to_ipfs
 )
 
 app = Flask(__name__)
-CORS(app)
 
-@app.route('/login', methods=['POST'])
+# MetaMask Login Page
+@app.route("/")
 def login():
+    return render_template("login.html")
+
+# Dashboard Page
+@app.route("/dashboard", methods=["POST"])
+def dashboard():
+    wallet_address = request.form.get("wallet_address")
+
+    if not wallet_address:
+        return render_template("login.html", error="Wallet address is required.")
+
+    # Fetch NFTs for the wallet
+    nfts_response = get_wallet_nfts(wallet_address)
+
+    if "error" in nfts_response:
+        return render_template("login.html", error=nfts_response["error"])
+    print(nfts_response)
+    nfts = nfts_response.get("nfts", [])
+    print(nfts)
+    return render_template("dashboard.html", wallet_address=wallet_address, nfts=nfts)
+
+@app.route('/register', methods=['POST'])
+def register():
     """
-    User provides a wallet address, we fetch all NFTs they own.
-    Expects JSON: { "wallet_address": "<address>" }
+    Mint an NFT via Verbwire using a metadata URL.
+    Expects JSON:
+    {
+      "wallet_address": "<recipient_wallet>",
+      "metadata_url": "<ipfs_or_https>",
+      "chain": "<blockchain>"  (optional, defaults to "sepolia")
+    }
+    """
+    data = request.get_json()
+    wallet_address = data.get("wallet_address")
+    metadata_url = data.get("metadata_url")
+    chain = data.get("chain", "sepolia")
+
+    if not wallet_address or not metadata_url:
+        return jsonify({"error": "wallet_address and metadata_url are required"}), 400
+
+    resp = mint_nft_from_metadata_url(metadata_url, wallet_address, chain=chain)
+    pprint(resp)
+    return jsonify(resp), 200
+
+
+@app.route('/auth', methods=['POST'])
+def auth_user():
+    """
+    Checks whether a given wallet has any NFTs (via Verbwire's /nft/data/owned).
+    Expects JSON:
+    {
+      "wallet_address": "<address_to_verify>"
+    }
+    Returns the list of NFTs if any are found.
     """
     data = request.get_json()
     wallet_address = data.get("wallet_address")
     if not wallet_address:
         return jsonify({"error": "wallet_address is required"}), 400
 
+    # Default to chain="sepolia" and tokenType="nft721"
     nfts_response = get_wallet_nfts(wallet_address)
     pprint(nfts_response)
 
+    # If there's an error or the "nfts" list is empty, handle accordingly
     if "error" in nfts_response:
+        # Means we got some error from Verbwire
         return jsonify({
             "authenticated": False,
             "error": nfts_response["error"]
@@ -41,11 +90,7 @@ def login():
 
     nfts_list = nfts_response.get("nfts", [])
     if not nfts_list:
-        return jsonify({
-            "authenticated": False,
-            "error": "No NFTs found for this wallet address.",
-            "nfts": []
-        }), 200
+        return jsonify({"authenticated": False, "error": "No NFTs found for this wallet address."}), 404
 
     return jsonify({
         "authenticated": True,
@@ -54,97 +99,14 @@ def login():
     }), 200
 
 
-@app.route('/mint_file_nft', methods=['POST'])
-def mint_file_nft():
-    """
-    The user uploads a file -> we upload to IPFS -> we create minimal metadata referencing that file
-    -> we also upload that metadata to IPFS -> we mint an NFT from that metadata to the user's wallet.
-
-    Form-data:
-      wallet_address=...
-      chain=sepolia (optional)
-      file=@someLocalFile
-    """
-    wallet_address = request.form.get("wallet_address")
-    chain = request.form.get("chain", "sepolia")
-
-    if not wallet_address:
-        return jsonify({"error": "wallet_address is required"}), 400
-    if 'file' not in request.files:
-        return jsonify({"error": "No file in the request"}), 400
-
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
-
-    # 1. Upload the raw file to IPFS
-    file_path = f"/tmp/{file.filename}"
-    file.save(file_path)
-    try:
-        ipfs_resp = upload_file_to_ipfs(file_path)
-    finally:
-        os.remove(file_path)
-
-    if "error" in ipfs_resp:
-        return jsonify({
-            "error": "Failed to upload file to IPFS",
-            "details": ipfs_resp
-        }), 400
-
-    ipfs_url = ipfs_resp.get("ipfs_storage", {}).get("ipfs_url")
-    if not ipfs_url:
-        return jsonify({
-            "error": "Could not parse IPFS URL from response",
-            "response": ipfs_resp
-        }), 400
-
-    # 2. Create a minimal metadata JSON that references the file
-    metadata = {
-        "name": "My Uploaded File",
-        "description": "NFT representing a user-uploaded file",
-        "image": ipfs_url,
-        "date_created": datetime.utcnow().isoformat()
-    }
-    timestamp_str = str(int(time.time()))
-    temp_metadata_file = f"/tmp/metadata_{timestamp_str}.json"
-    with open(temp_metadata_file, 'w') as f:
-        json.dump(metadata, f)
-
-    # 3. Upload that JSON to IPFS
-    try:
-        meta_ipfs_resp = upload_file_to_ipfs(temp_metadata_file)
-    finally:
-        os.remove(temp_metadata_file)
-
-    if "error" in meta_ipfs_resp:
-        return jsonify({
-            "error": "Failed to upload metadata JSON to IPFS",
-            "details": meta_ipfs_resp
-        }), 400
-
-    metadata_ipfs_url = meta_ipfs_resp.get("ipfs_storage", {}).get("ipfs_url")
-    if not metadata_ipfs_url:
-        return jsonify({
-            "error": "Could not parse IPFS URL for metadata",
-            "response": meta_ipfs_resp
-        }), 400
-
-    # 4. Mint NFT from the metadata IPFS URL
-    mint_resp = mint_nft_from_metadata_url(metadata_ipfs_url, wallet_address, chain=chain)
-
-    return jsonify({
-        "minted": True,
-        "wallet_address": wallet_address,
-        "metadata_ipfs_url": metadata_ipfs_url,
-        "mint_response": mint_resp
-    }), 200
-
-
 @app.route('/check_status', methods=['POST'])
 def check_status():
     """
     Check the status of a minting transaction by ID.
-    Expects JSON: { "transaction_id": "...someTxID..." }
+    Expects JSON:
+    {
+      "transaction_id": "<verbwire_transaction_id>"
+    }
     """
     data = request.get_json()
     transaction_id = data.get("transaction_id")
@@ -157,66 +119,122 @@ def check_status():
     return jsonify(resp), 200
 
 
-@app.route('/update_metadata', methods=['POST'])
-def update_metadata_endpoint():
+@app.route("/update_metadata", methods=["POST"])
+def update_metadata():
     """
-    Directly updates an NFT's on-chain metadata to a new URI.
-
-    Expects JSON:
-    {
-      "contract_address": "...",
-      "token_id": "...",
-      "new_token_uri": "...",
-      "chain": "sepolia" (optional)
-    }
+    Updates the metadata of an existing NFT.
+    Handles both JSON and form data.
     """
-    data = request.get_json()
-    contract_address = data.get("contract_address")
-    token_id = data.get("token_id")
-    new_token_uri = data.get("new_token_uri")
-    chain = data.get("chain", "sepolia")
 
-    if not contract_address or not token_id or not new_token_uri:
-        return jsonify({
-            "error": "contract_address, token_id, and new_token_uri are required"
-        }), 400
+    # Check if the data is coming as JSON or form data
+    if request.is_json:
+        # Handle JSON data
+        data = request.get_json()
+        contract_address = data.get("contract_address")
+        token_id = data.get("token_id")
+        new_token_uri = data.get("new_token_uri")
+        chain = data.get("chain", "sepolia")  # Default to "sepolia"
+    else:
+        # Handle form data
+        contract_address = request.form.get("contract_address")
+        token_id = request.form.get("token_id")
+        new_token_uri = request.form.get("new_token_uri")
+        chain = request.form.get("chain", "sepolia")  # Default to "sepolia"
 
-    resp = update_nft_metadata(
+    # Validate required fields
+    if not all([contract_address, token_id, new_token_uri]):
+        return jsonify({"error": "contract_address, token_id, and new_token_uri are required"}), 400
+
+    # Call the utility function to update NFT metadata
+    update_response = update_nft_metadata(
         contract_address=contract_address,
         token_id=token_id,
         new_token_uri=new_token_uri,
         chain=chain
     )
-    pprint(resp)
-    return jsonify(resp), 200
+
+    # Handle response from the utility function
+    if "error" in update_response:
+        return jsonify({"error": update_response["error"]}), 400
+
+    # Redirect to the dashboard if using form data or return JSON response
+    if not request.is_json:
+        return redirect(url_for("dashboard"))
+    
+    return jsonify(update_response), 200
 
 
-@app.route('/view_nft_image', methods=['POST'])
+
+@app.route('/upload_file', methods=['POST'])
+def upload_file():
+    """
+    Upload a local file to IPFS via Verbwire's /nft/store/file endpoint.
+    Expects a multipart/form-data with { "file": <the_file> }
+    """
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part in the request"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    file_path = f"/tmp/{file.filename}"
+    file.save(file_path)
+
+    try:
+        resp = upload_file_to_ipfs(file_path)
+        pprint(resp)
+        return jsonify(resp), 200
+    finally:
+        os.remove(file_path)
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_page():
+    """
+    Handles the upload page and processes file uploads.
+    """
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            return render_template('upload.html', error="No file part in the request.")
+        
+        file = request.files['file']
+        if file.filename == '':
+            return render_template('upload.html', error="No selected file.")
+        
+        file_path = f"/tmp/{file.filename}"
+        file.save(file_path)
+
+        try:
+            resp = upload_file_to_ipfs(file_path)
+            # Add success data to pass to the template
+            return render_template('upload.html', success=resp)
+        finally:
+            os.remove(file_path)
+    
+    return render_template('upload.html')
+
+@app.route('/view_nft_image', methods=['GET'])
 def view_nft_image():
     """
     Calls Verbwire's getNFTDetails endpoint to retrieve the NFT metadata,
     then redirects to the 'image' URL in the metadata.
 
-    Expects JSON:
-    {
-      "contract_address": "<NFT contract>",
-      "token_id": "<NFT token ID>",
-      "chain": "sepolia" (optional)
-    }
-
-    If found, we do a 302 redirect to the 'image' link from the metadata.
+    Query Parameters:
+      - contract_address: NFT contract address
+      - token_id: NFT token ID
+      - chain: Blockchain network (default: "sepolia")
     """
-    data = request.get_json()
-    contract_address = data.get("contract_address")
-    token_id = data.get("token_id")
-    chain = data.get("chain", "sepolia")
+    contract_address = request.args.get("contract_address")
+    token_id = request.args.get("token_id")
+    chain = request.args.get("chain", "sepolia")
 
     if not contract_address or not token_id:
-        return jsonify({"error": "contract_address and token_id are required"}), 400
+        return jsonify({"error": "Missing contract_address or token_id"}), 400
 
-    # Step 1: Get NFT details from Verbwire
+    # Step 1: Fetch NFT details using the Verbwire helper
     from utils.verbwire import get_nft_details
     details = get_nft_details(contract_address, token_id, chain=chain, populate_metadata=True)
+
     if "error" in details:
         return jsonify({"error": details["error"]}), 400
 
@@ -225,14 +243,14 @@ def view_nft_image():
     image_url = metadata.get("image")
 
     if not image_url:
-        return jsonify({
-            "error": "No image URL found in NFT metadata.",
-            "metadata": metadata
-        }), 400
+        return jsonify({"error": "Image URL not found in NFT metadata."}), 404
 
-    # Step 2: Redirect the user to that image URL
+    # Step 2: Redirect to the image URL
     return redirect(image_url, code=302)
+
 
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+

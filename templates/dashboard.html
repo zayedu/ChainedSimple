@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dashboard</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    </head>
+    <body>
+        <div class="container">
+            <h1>Welcome, {{ wallet_address }}</h1>
+            <h2>Your NFTs</h2>
+            {% if nfts %}
+                <ul>
+                    {% for nft in nfts %}
+                        <li>
+                            <h3>{{ nft.tokenName }}</h3>
+                            <p><strong>Token ID:</strong> {{ nft.tokenID }}</p>
+                            <p><strong>Contract Address:</strong> {{ nft.contractAddress }}</p>
+                            <p><strong>Token Symbol:</strong> {{ nft.tokenSymbol }}</p>
+                            <a href="{{ url_for('view_nft_image', contract_address=nft.contractAddress, token_id=nft.tokenID, chain='sepolia') }}" target="_blank">
+                                View NFT Image
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No NFTs found for this wallet address.</p>
+            {% endif %}
+            <a href="{{ url_for('upload_page') }}">Upload Documents</a>
+        </div>
+        <script>
+            async function displayNFT(contractAddress, tokenID) {
+                const nftDiv = document.getElementById(`nft-${tokenID}`);
+                if (nftDiv.style.display === 'none') {
+                    nftDiv.style.display = 'block';
+    
+                    // Fetch NFT metadata from your backend or blockchain service
+                    const response = await fetch(`/get_nft_details?contractAddress=${contractAddress}&tokenID=${tokenID}`);
+                    const data = await response.json();
+    
+                    // Update the div with the NFT details (e.g., image and metadata)
+                    if (response.ok && data.image_url) {
+                        nftDiv.innerHTML = `
+                            <img src="${data.image_url}" alt="NFT Image" style="max-width: 200px;">
+                            <p><strong>Description:</strong> ${data.description || 'No description available.'}</p>
+                        `;
+                    } else {
+                        nftDiv.innerHTML = `<p>Error: ${data.error || 'Could not fetch NFT details.'}</p>`;
+                    }
+                } else {
+                    nftDiv.style.display = 'none'; // Toggle visibility
+                }
+            }
+        </script>
+    <div class="upload-section">
+        <h2>Upload Your Documents</h2>
+        <form id="uploadForm" method="POST" enctype="multipart/form-data">
+            <label for="file">Select Document:</label>
+            <input type="file" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.png" required>
+            <button type="submit">Upload</button>
+        </form>
+        <p id="upload-status"></p>
+    </div>
+    
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadStatus = document.getElementById('upload-status');
+    
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            uploadStatus.textContent = 'Uploading...';
+    
+            const formData = new FormData();
+            const fileInput = document.getElementById('file');
+            formData.append('file', fileInput.files[0]);
+    
+            try {
+                const response = await fetch('/upload_file', {
+                    method: 'POST',
+                    body: formData,
+                });
+    
+                const result = await response.json();
+                if (response.ok) {
+                    uploadStatus.textContent = 'File uploaded successfully!';
+                    console.log('Upload result:', result);
+                } else {
+                    uploadStatus.textContent = `Error: ${result.error || 'Failed to upload file.'}`;
+                }
+            } catch (error) {
+                console.error('Error during file upload:', error);
+                uploadStatus.textContent = 'An error occurred while uploading. Please try again.';
+            }
+        });
+    </script> 
+</body>
+</html>
