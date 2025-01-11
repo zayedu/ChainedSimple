@@ -24,7 +24,10 @@
     <div class="main">
       <div class="mainLeft">
           <div class="mainLeftButton">Investment</div>
-          <div class="mainLeftButton">My NFT's</div>
+          <form method="POST" action="{{ url_for('dashboard') }}">
+            <input type="hidden" name="wallet_address" value="{{ wallet_address }}">
+            <button type="submit" class="mainLeftButton">My NFT's</button>
+        </form>
           <div class="mainLeftButton">Mutual Funds</div>
           <div class="mainLeftButton">GICs</div>
           <div class="mainLeftButton">Stocks</div>

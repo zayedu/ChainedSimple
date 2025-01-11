@@ -39,6 +39,12 @@ def dashboard():
     print(nfts)
     return render_template("dashboard.html", wallet_address=wallet_address, nfts=nfts)
 
+# Homepage
+@app.route("/home", methods=["POST"])
+def home():
+    wallet_address = request.form.get("wallet_address")
+    return render_template("homepage.html", wallet_address=wallet_address)
+
 @app.route('/register', methods=['POST'])
 def register():
     """
