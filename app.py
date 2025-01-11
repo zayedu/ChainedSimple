@@ -1,16 +1,19 @@
-from flask import Flask
-import os
-from dotenv import load_dotenv
 from pprint import pprint
+from flask import Flask, request, jsonify, CORS
+import os
+import json
+import time
+from datetime import datetime
+
+# Import Verbwire helper functions
+from utils.verbwire import (
+    mint_nft_from_metadata_url,
+    get_wallet_nfts,
+    check_transaction_status,
+    update_nft_metadata,
+    upload_file_to_ipfs
+)
+
 app = Flask(__name__)
+CORS(app)
 
-
-load_dotenv()
-VERBWIRE_API_KEY = os.getenv("VERBWIRE_API_KEY")
-@app.route('/')
-def hello_world():  # put application's code here
-    return 'Hello World!'
-
-
-if __name__ == '__main__':
-    app.run()
