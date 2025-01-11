@@ -129,5 +129,18 @@ def mint_file_nft():
     }), 200
 
 #TODO: Check the status when we send a mint request
+@app.route('/check_status', methods=['POST'])
+def check_status():
+
+    data = request.get_json()
+    transaction_id = data.get("transaction_id")
+
+    if not transaction_id:
+        return jsonify({"error": "transaction_id is required"}), 400
+
+    resp = check_transaction_status(transaction_id)
+    pprint(resp)
+    return jsonify(resp), 200
+
 
 #TODO: Update the metadata of a token
