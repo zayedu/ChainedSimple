@@ -17,3 +17,37 @@ from utils.verbwire import (
 app = Flask(__name__)
 CORS(app)
 
+'''
+Basically here were gonna have a user give their wallet address and then we use verbwire api to find their nfts
+'''
+
+@app.route('/login', methods=['POST'])
+def login():
+
+    data = request.get_json()
+    wallet_address = data.get("wallet_address")
+    if not wallet_address:
+        return jsonify({"error": "wallet_address is required"}), 400
+
+    nfts_response = get_wallet_nfts(wallet_address)
+    pprint(nfts_response)
+
+    if "error" in nfts_response:
+        return jsonify({
+            "authenticated": False,
+            "error": nfts_response["error"]
+        }), 400
+
+    nfts_list = nfts_response.get("nfts", [])
+    if not nfts_list:
+        return jsonify({
+            "authenticated": False,
+            "error": "No NFTs found for this wallet address.",
+            "nfts": []
+        }), 200  #
+
+    return jsonify({
+        "authenticated": True,
+        "wallet_address": wallet_address,
+        "nfts": nfts_list
+    }), 200
