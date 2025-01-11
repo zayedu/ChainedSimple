@@ -54,6 +54,79 @@ def login():
 
 #TODO: We need to mint an nft when the user uploads a file
 
+@app.route('/mint_file_nft', methods=['POST'])
+def mint_file_nft():
+
+    wallet_address = request.form.get("wallet_address")
+    chain = request.form.get("chain", "sepolia")
+
+    if not wallet_address:
+        return jsonify({"error": "wallet_address is required"}), 400
+    if 'file' not in request.files:
+        return jsonify({"error": "No file in the request"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    file_path = f"/tmp/{file.filename}"
+    file.save(file_path)
+    try:
+        ipfs_resp = upload_file_to_ipfs(file_path)
+    finally:
+        os.remove(file_path)
+
+    if "error" in ipfs_resp:
+        return jsonify({
+            "error": "Failed to upload file to IPFS",
+            "details": ipfs_resp
+        }), 400
+
+    ipfs_url = ipfs_resp.get("ipfs_storage", {}).get("ipfs_url")
+    if not ipfs_url:
+        return jsonify({
+            "error": "Could not parse IPFS URL from response",
+            "response": ipfs_resp
+        }), 400
+
+    metadata = {
+        "name": "My Uploaded File",
+        "description": "NFT representing a user-uploaded file",
+        "image": ipfs_url,
+        "date_created": datetime.utcnow().isoformat()
+    }
+
+    timestamp_str = str(int(time.time()))
+    temp_metadata_file = f"/tmp/metadata_{timestamp_str}.json"
+    with open(temp_metadata_file, 'w') as f:
+        json.dump(metadata, f)
+
+    try:
+        meta_ipfs_resp = upload_file_to_ipfs(temp_metadata_file)
+    finally:
+        os.remove(temp_metadata_file)
+
+    if "error" in meta_ipfs_resp:
+        return jsonify({
+            "error": "Failed to upload metadata JSON to IPFS",
+            "details": meta_ipfs_resp
+        }), 400
+
+    metadata_ipfs_url = meta_ipfs_resp.get("ipfs_storage", {}).get("ipfs_url")
+    if not metadata_ipfs_url:
+        return jsonify({
+            "error": "Could not parse IPFS URL for metadata",
+            "response": meta_ipfs_resp
+        }), 400
+
+    mint_resp = mint_nft_from_metadata_url(metadata_ipfs_url, wallet_address, chain=chain)
+
+    return jsonify({
+        "minted": True,
+        "wallet_address": wallet_address,
+        "metadata_ipfs_url": metadata_ipfs_url,
+        "mint_response": mint_resp
+    }), 200
 
 #TODO: Check the status when we send a mint request
 
