@@ -1,4 +1,6 @@
 from pprint import pprint
+
+import requests
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from utils.verbwire import get_wallet_nfts, update_nft_metadata
 import os
@@ -234,19 +236,19 @@ def view_nft_image():
     # Step 1: Fetch NFT details using the Verbwire helper
     from utils.verbwire import get_nft_details
     details = get_nft_details(contract_address, token_id, chain=chain, populate_metadata=True)
-
+    ipfs_uri = details.get('nft_details').get("tokenURI")
+    ipfs = requests.get(ipfs_uri)
+    image_uri = ipfs.json().get("image")
     if "error" in details:
         return jsonify({"error": details["error"]}), 400
 
-    nft_details = details.get("nft_details", {})
-    metadata = nft_details.get("metadata", {})
-    image_url = metadata.get("image")
+    # Extract the image URL from the metadata
 
-    if not image_url:
+    if not image_uri:
         return jsonify({"error": "Image URL not found in NFT metadata."}), 404
 
     # Step 2: Redirect to the image URL
-    return redirect(image_url, code=302)
+    return redirect(image_uri, code=302)
 
 
 
