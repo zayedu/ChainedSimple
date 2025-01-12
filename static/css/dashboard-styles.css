@@ -55,7 +55,7 @@ li {
 
 /* Links */
 a {
-    color: #3498db;
+    color: #8b1d3f;
     text-decoration: none;
     font-weight: bold;
 }
@@ -66,9 +66,10 @@ a:hover {
 
 /* Buttons */
 button {
-    background-color: #3498db;
-    color: #fff;
-    border: none;
+    background-color: #FFF;
+    color: black;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     padding: 10px 15px;
     border-radius: 4px;
     cursor: pointer;
@@ -76,7 +77,8 @@ button {
 }
 
 button:hover {
-    background-color: #2980b9;
+    background-color: #8b1d3f;
+    color: white;
 }
 
 /* Upload Section */
@@ -191,7 +193,7 @@ input[type="file"] {
 /* Submit button styling */
 .upload-section button {
     padding: 10px 15px;
-    background-color: #007BFF;
+    background-color: #8b1d3f;
     color: #fff;
     border: none;
     border-radius: 5px;
@@ -201,7 +203,7 @@ input[type="file"] {
 }
 
 .upload-section button:hover {
-    background-color: #0056b3;
+    background-color: #8b1d3f;
 }
 
 /* Status message styling */
