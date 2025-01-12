@@ -21,7 +21,7 @@
                 </li>
             </ul>
         {% endif %}
-        <form method="POST" action="{{ url_for('upload_page') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data">
             <label for="file">Select Document:</label>
             <input type="file" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.png,.json" required>
 

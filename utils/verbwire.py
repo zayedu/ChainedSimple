@@ -26,9 +26,14 @@ def mint_nft_from_metadata_url(metadata_url, wallet_address, chain="sepolia"):
     """
     quickMintFromMetadataUrl_endpoint = f"{VERBWIRE_BASE_URL}/nft/mint/quickMintFromMetadataUrl"
 
+    if not metadata_url or not wallet_address:
+        return {
+            "error": "metadata_url and wallet_address are required."
+        }
+    
     form_data = {
-        "metadataUrl": (None, metadata_url),
-        "recipientAddress": (None, wallet_address),
+        "metadataUrl": metadata_url,
+        "recipientAddress": wallet_address,
         "allowPlatformToOperateToken": (None, "true"),
         "chain": (None, chain)
     }
@@ -38,7 +43,7 @@ def mint_nft_from_metadata_url(metadata_url, wallet_address, chain="sepolia"):
         "accept": "application/json"
     }
 
-    response = requests.post(quickMintFromMetadataUrl_endpoint, files=form_data, headers=headers)
+    response = requests.post(quickMintFromMetadataUrl_endpoint, data=form_data, headers=headers)
     try:
         return response.json()
     except Exception:

@@ -26,21 +26,29 @@ def login():
     return render_template("login.html")
 
 # Dashboard Page
-@app.route("/dashboard", methods=["POST"])
+@app.route("/dashboard", methods=["GET","POST"])
 def dashboard():
-    wallet_address = request.form.get("wallet_address")
-    if not wallet_address:
-        return render_template("login.html", error="Wallet address is required.")
+    try:
+        if request.method == "POST":
+            wallet_address = request.form.get("wallet_address")
+        else:
+            wallet_address = request.args.get("wallet_address")  # For GET requests
+            
+        if not wallet_address:
+            return render_template("login.html", error="Wallet address is required.")
+        
+        # Rest of the code remains the same
+        nfts_response = get_wallet_nfts(wallet_address)
+        if "error" in nfts_response:
+            return render_template("login.html", error=nfts_response["error"])
 
-    # Fetch NFTs for the wallet
-    nfts_response = get_wallet_nfts(wallet_address)
+        nfts = nfts_response.get("nfts", [])
+        return render_template("dashboard.html", wallet_address=wallet_address, nfts=nfts)
+    except Exception as e:
+        print(e)
+        return render_template("login.html", error="An error occurred.")
+    
 
-    if "error" in nfts_response:
-        return render_template("login.html", error=nfts_response["error"])
-   # print(nfts_response)
-    nfts = nfts_response.get("nfts", [])
-    #print(nfts)
-    return render_template("dashboard.html", wallet_address=wallet_address, nfts=nfts)
 
 
 # Homepage
@@ -57,6 +65,7 @@ def register():
     chain = data.get("chain", "sepolia")
 
     if not wallet_address or not metadata_url:
+        print("wallet_address or metadata_url not found")
         return jsonify({"error": "wallet_address and metadata_url are required"}), 400
 
     resp = mint_nft_from_metadata_url(metadata_url, wallet_address, chain=chain)
@@ -122,55 +131,54 @@ def check_status():
     return jsonify(resp), 200
 
 
-@app.route("/update_metadata", methods=["POST"])
-def update_metadata():
-    """
-    Updates the metadata of an existing NFT.
-    Handles both JSON and form data.
-    """
+# @app.route("/update_metadata", methods=["POST"])
+# def update_metadata():
+#     """
+#     Updates the metadata of an existing NFT.
+#     Handles both JSON and form data.
+#     """
 
-    # Check if the data is coming as JSON or form data
-    if request.is_json:
-        # Handle JSON data
-        data = request.get_json()
-        contract_address = data.get("contract_address")
-        token_id = data.get("token_id")
-        new_token_uri = data.get("new_token_uri")
-        chain = data.get("chain", "sepolia")  # Default to "sepolia"
-    else:
-        # Handle form data
-        contract_address = request.form.get("contract_address")
-        token_id = request.form.get("token_id")
-        new_token_uri = request.form.get("new_token_uri")
-        chain = request.form.get("chain", "sepolia")  # Default to "sepolia"
+#     # Check if the data is coming as JSON or form data
+#     if request.is_json:
+#         # Handle JSON data
+#         data = request.get_json()
+#         contract_address = data.get("contract_address")
+#         token_id = data.get("token_id")
+#         new_token_uri = data.get("new_token_uri")
+#         chain = data.get("chain", "sepolia")  # Default to "sepolia"
+#     else:
+#         # Handle form data
+#         contract_address = request.form.get("contract_address")
+#         token_id = request.form.get("token_id")
+#         new_token_uri = request.form.get("new_token_uri")
+#         chain = request.form.get("chain", "sepolia")  # Default to "sepolia"
 
-    # Validate required fields
-    if not all([contract_address, token_id, new_token_uri]):
-        return jsonify({"error": "contract_address, token_id, and new_token_uri are required"}), 400
+#     # Validate required fields
+#     if not all([contract_address, token_id, new_token_uri]):
+#         return jsonify({"error": "contract_address, token_id, and new_token_uri are required"}), 400
 
-    # Call the utility function to update NFT metadata
-    update_response = update_nft_metadata(
-        contract_address=contract_address,
-        token_id=token_id,
-        new_token_uri=new_token_uri,
-        chain=chain
-    )
+#     # Call the utility function to update NFT metadata
+#     update_response = update_nft_metadata(
+#         contract_address=contract_address,
+#         token_id=token_id,
+#         new_token_uri=new_token_uri,
+#         chain=chain
+#     )
 
-    # Handle response from the utility function
-    if "error" in update_response:
-        return jsonify({"error": update_response["error"]}), 400
+#     # Handle response from the utility function
+#     if "error" in update_response:
+#         return jsonify({"error": update_response["error"]}), 400
 
-    # Redirect to the dashboard if using form data or return JSON response
-    if not request.is_json:
-        return redirect(url_for("dashboard"))
+#     # Redirect to the dashboard if using form data or return JSON response
+#     if not request.is_json:
+#         return redirect(url_for("dashboard"))
     
-    return jsonify(update_response), 200
+#     return jsonify(update_response), 200
 
 
 
 @app.route('/upload_file', methods=['POST'])
 def upload_file():
-
     if 'file' not in request.files:
         return jsonify({"error": "No file part in the request"}), 400
 
@@ -188,12 +196,35 @@ def upload_file():
     description = request.form.get("description", "Statement form")
 
     try:
+        # Store file metadata
         resp = store_file_as_metadata(file_path, name=name, description=description)
-        ipfs_url = resp.get("ipfs_storage").get("ipfs_url")
+        if "error" in resp:
+            return jsonify({"error": resp["error"]}), 400
+            
+        # Get IPFS URL and mint NFT
+        ipfs_url = resp.get("ipfs_storage", {}).get("ipfs_url")
+        print("IPFS URL", ipfs_url)
+        if not ipfs_url:
+            return jsonify({"error": "Failed to get IPFS URL"}), 400
+        print("Wallet address", wallet_address)
+        print("IPFS URL", ipfs_url)
         response = mint_nft_from_metadata_url(ipfs_url, wallet_address, chain="sepolia")
-        return redirect(url_for(dashboard), wallet_address = wallet_address)
+        if "error" in response:
+            return jsonify({"error": response["error"]}), 400
+            
+        # Return JSON response instead of redirect
+        return jsonify({
+            "success": True,
+            "wallet_address": wallet_address,
+            "transaction": response
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     finally:
-        os.remove(file_path)
+        # Clean up temporary file
+        if os.path.exists(file_path):
+            os.remove(file_path)
 
 
 @app.route('/upload', methods=['GET', 'POST'])
