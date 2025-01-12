@@ -17,6 +17,7 @@ OWNED_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/data/owned"
 UPDATE_METADATA_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/update/updateTokenMetadata"
 STORE_FILE_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/store/file"
 NFT_DETAILS_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/data/nftDetails"
+STORE_AS_METADATA_ENDPOINT = f"{VERBWIRE_BASE_URL}/nft/store/metadataFromImage"
 
 
 def mint_nft_from_metadata_url(metadata_url, wallet_address, chain="sepolia"):
@@ -123,6 +124,32 @@ def update_nft_metadata(contract_address, token_id, new_token_uri, chain="sepoli
             "error": "Failed to parse JSON from Verbwire response.",
             "raw": response.text
         }
+
+def store_file_as_metadata(file_path,name,description,chain = 'sepolia'):
+
+    headers = {
+        "X-API-Key": VERBWIRE_API_KEY,
+        "accept": "application/json"
+    }
+    payload ={
+        "name": name,
+        "description": description
+    }
+
+    with open(file_path, "rb") as f:
+        files = {"filePath": f}
+        response = requests.post(STORE_AS_METADATA_ENDPOINT, data=payload,headers = headers, files=files)
+
+    try:
+        json_resp = response.json()
+        pprint(json_resp)  # For debugging
+        return json_resp
+    except Exception:
+        return {
+            "error": "Failed to parse JSON from Verbwire response.",
+            "raw": response.text
+        }
+
 
 
 def upload_file_to_ipfs(file_path):

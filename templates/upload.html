@@ -23,9 +23,13 @@
         {% endif %}
         <form method="POST" action="{{ url_for('upload_page') }}" enctype="multipart/form-data">
             <label for="file">Select Document:</label>
-            <input type="file" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.png" required>
+            <input type="file" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.png,.json" required>
+
+            <!-- Hidden input to pass the wallet_address -->
+            <input type="hidden" name="wallet_address" value="{{ wallet_address }}">
             <button type="submit">Upload</button>
         </form>
+
         <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
     </div>
 </body>

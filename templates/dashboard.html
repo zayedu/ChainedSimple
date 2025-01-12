@@ -53,46 +53,65 @@
                 }
             }
         </script>
-    <div class="upload-section">
-        <h2>Upload Your Documents</h2>
-        <form id="uploadForm" method="POST" enctype="multipart/form-data">
-            <label for="file">Select Document:</label>
-            <input type="file" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.png" required>
-            <button type="submit">Upload</button>
-        </form>
-        <p id="upload-status"></p>
-    </div>
-    
-    <script>
-        const uploadForm = document.getElementById('uploadForm');
-        const uploadStatus = document.getElementById('upload-status');
-    
-        uploadForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            uploadStatus.textContent = 'Uploading...';
-    
-            const formData = new FormData();
-            const fileInput = document.getElementById('file');
-            formData.append('file', fileInput.files[0]);
-    
-            try {
-                const response = await fetch('/upload_file', {
-                    method: 'POST',
-                    body: formData,
-                });
-    
-                const result = await response.json();
-                if (response.ok) {
-                    uploadStatus.textContent = 'File uploaded successfully!';
-                    console.log('Upload result:', result);
-                } else {
-                    uploadStatus.textContent = `Error: ${result.error || 'Failed to upload file.'}`;
+        <div class="upload-section">
+            <h2>Upload Your Documents</h2>
+            <form id="uploadForm" method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data">
+                <label for="file">Select Document:</label>
+                <input type="file" id="file" name="file" accept=".pdf,.doc,.docx,.jpg,.png,.json" required>
+
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" placeholder="Enter document name" required>
+
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" placeholder="Enter document description" required></textarea>
+
+                <!-- Hidden input to store the wallet address -->
+                <input type="hidden" id="walletAddress" value="{{ wallet_address }}">
+
+                <button type="submit">Upload</button>
+            </form>
+            <p id="upload-status"></p>
+        </div>
+
+        <script>
+            const uploadForm = document.getElementById('uploadForm');
+            const uploadStatus = document.getElementById('upload-status');
+
+            uploadForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                uploadStatus.textContent = 'Uploading...';
+
+                const formData = new FormData();
+                const fileInput = document.getElementById('file');
+                const nameInput = document.getElementById('name');
+                const descriptionInput = document.getElementById('description');
+                const walletAddress = document.getElementById('walletAddress').value;
+
+                // Append file, name, description, and wallet address to form data
+                formData.append('file', fileInput.files[0]);
+                formData.append('name', nameInput.value);
+                formData.append('description', descriptionInput.value);
+                formData.append('wallet_address', walletAddress);
+
+                try {
+                    const response = await fetch('/upload_file', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    const result = await response.json();
+                    if (response.ok) {
+                        uploadStatus.textContent = 'File uploaded successfully!';
+                        console.log('Upload result:', result);
+                    } else {
+                        uploadStatus.textContent = `Error: ${result.error || 'Failed to upload file.'}`;
+                    }
+                } catch (error) {
+                    console.error('Error during file upload:', error);
+                    uploadStatus.textContent = 'An error occurred while uploading. Please try again.';
                 }
-            } catch (error) {
-                console.error('Error during file upload:', error);
-                uploadStatus.textContent = 'An error occurred while uploading. Please try again.';
-            }
-        });
-    </script> 
-</body>
+            });
+        </script>
+
+    </body>
 </html>
