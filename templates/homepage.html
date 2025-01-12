@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello, World!</title>
+    <link rel="stylesheet" href="../static/css/homepage-styles.css" />
+  </head>
+  <body>
+      <div class="top">
+        <div class="navButton">Help Center</div>
+        <div class="navButton">AdChoices</div>
+        <div class="navButton">Sign Off</div>
+      </div>
+      
+      <img class="logo" src="https://mma.prnewswire.com/media/1632139/CIBC_CIBC_unveils_new_look_symbolizing_the_bank_s_purpose_of_hel.jpg?p=facebook" alt="" style="width: 142px">
+      
+      <div class="left">
+          <div class="leftButton" style="background: #C41F3E; color: white;">Banking</div>
+          <div class="leftButton">Investing</div>
+          <div class="leftButton">Product</div>
+          <div class="leftButton">Offers</div>
+      </div>
+      
+
+    <div class="main">
+      <div class="mainLeft">
+          <div class="mainLeftButton">Investment</div>
+          <form method="POST" action="{{ url_for('dashboard') }}">
+            <input type="hidden" name="wallet_address" value="{{ wallet_address }}">
+            <button type="submit" class="mainLeftButton">My NFT's</button>
+        </form>
+          <div class="mainLeftButton">Mutual Funds</div>
+          <div class="mainLeftButton">GICs</div>
+          <div class="mainLeftButton">Stocks</div>
+      </div>
+  
+        <img class="main-img" src="https://cdn.discordapp.com/attachments/1326308552872165440/1327806594347696128/image.png?ex=678467c1&is=67831641&hm=ee1d7db07a6bd92eefee99ad7395ecc2b005363f1bc9dbd51fae193eb46c42f6&">
+    </div>
+      <script src="script.js"></script>
+  </body>
+</html>

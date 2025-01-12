@@ -1,0 +1,116 @@
+body{
+    padding: 0px;
+    margin: 0;
+  }
+.title {
+    color: #5C6AC4;
+}
+
+
+.top {
+width: full;
+height: 80px;
+background: #8B1D40;
+display: flex;
+justify-content: flex-end;
+align-items: center;
+}
+
+.navButton {
+width: 135px;
+height: 20px;
+color: #FFF;
+font-family: Arial;
+font-size: 20px;
+font-style: normal;
+font-weight: 400;
+line-height: normal;
+}
+
+.left {
+    display: flex; /* Align buttons in a row */
+    gap: 20px; /* Optional: space between buttons */
+}
+
+.logo {
+margin-left: 10px;
+}
+
+
+
+.leftButton {
+    width: 150px;
+    height: 80px;
+    margin-left: 10px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    background: #F2F3F2;
+    display: flex;
+    justify-content: center; /* Center the text horizontally */
+    align-items: center; /* Center the text vertically */
+    color: black; /* Text color */
+    font-size: 18px; /* Text size */
+}
+
+.homeButtons {
+width: 150px;
+height: 80px;
+margin: 10px;
+border-radius: 10px;
+border: 1px solid #8A8282;
+background: #FFFFFF;
+display: flex;
+justify-content: center; /* Center the text horizontally */
+align-items: center; /* Center the text vertically */
+color: Black; /* Text color */
+font-size: 18px; /* Text size */
+}
+
+
+.main {
+display: flex; /* Create a flex container */
+
+gap: 20px; /* Optional: space between sections */
+}
+
+.mainLeft {
+display: flex;
+flex-direction: column; /* Arrange buttons vertically */
+gap: 10px; /* Optional: space between buttons */
+width: 200px; /* Adjust the width as needed */
+}
+
+.mainMiddle {
+flex: 1; /* Middle section takes up remaining space */
+background-color: #f0f0f0; /* Optional: background color for middle section */
+}
+
+.mainRight {
+width: 200px; /* Adjust the width as needed */
+background-color: #e0e0e0; /* Optional: background color for right section */
+}
+
+.mainLeftButton {
+width: 150px;
+height: 80px;
+border-radius: 10px;
+margin: 10px;
+background: #ffffff;
+display: flex;
+justify-content: center; /* Center the text horizontally */
+align-items: center; /* Center the text vertically */
+color: black; /* Text color */
+font-size: 18px; /* Text size */
+border: 2px solid #C41F3E; /* Optional: add a border around the buttons */
+}
+
+
+.mainLeftButton:hover {
+    background: #C41F3E; /* Change background to red on hover */
+    color: white; /* Optional: Change text color for better contrast */
+}
+
+
+.main-img {
+    width: 100%;
+}

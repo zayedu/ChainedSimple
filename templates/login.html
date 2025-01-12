@@ -228,7 +228,7 @@
                 {% if error %}
                     <p class="error-message">{{ error }}</p>
                 {% endif %}
-                <form method="POST" action="{{ url_for('dashboard') }}">
+                <form method="POST" action="{{ url_for('home') }}">
                     <div class="form-group">
                         <label for="wallet_address">Wallet Address:</label>
                         <input type="text" id="wallet_address" name="wallet_address" required>
@@ -278,7 +278,7 @@
                 const result = await response.json();
                 if (response.ok) {
                     console.log("Authentication successful:", result);
-                    window.location.href = "/dashboard"; // Redirect to the dashboard
+                    window.location.href = "/homepage"; // Redirect to the dashboard
                 } else {
                     console.error("Authentication failed:", result);
                     errorMessage.textContent = result.error || "Failed to authenticate. Please try again.";
