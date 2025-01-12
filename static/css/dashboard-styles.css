@@ -131,3 +131,83 @@ input[type="file"] {
         text-align: left;
     }
 }
+
+
+/* General container styling */
+.upload-section {
+    margin-top: 30px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    max-width: 800px;  /* Match the width of the .container */
+    margin: 20px auto;  /* Center the section within the container */
+}
+
+/* Header styling */
+.upload-section h2 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Form styling */
+.upload-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Label styling */
+.upload-section label {
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+/* Input field styling */
+.upload-section input[type="text"],
+.upload-section input[type="file"],
+.upload-section textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+/* File input styling */
+.upload-section input[type="file"] {
+    padding: 5px;
+}
+
+/* Textarea styling */
+.upload-section textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Submit button styling */
+.upload-section button {
+    padding: 10px 15px;
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.upload-section button:hover {
+    background-color: #0056b3;
+}
+
+/* Status message styling */
+.upload-section #upload-status {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #777;
+    text-align: center;
+}
