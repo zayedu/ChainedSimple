@@ -4,6 +4,8 @@ import requests
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from utils.verbwire import get_wallet_nfts, update_nft_metadata
 import os
+import json
+import cohere
 
 # Import the refactored Verbwire helper functions
 from utils.verbwire import (
@@ -35,9 +37,9 @@ def dashboard():
 
     if "error" in nfts_response:
         return render_template("login.html", error=nfts_response["error"])
-    print(nfts_response)
+   # print(nfts_response)
     nfts = nfts_response.get("nfts", [])
-    print(nfts)
+    #print(nfts)
     return render_template("dashboard.html", wallet_address=wallet_address, nfts=nfts)
 
 @app.route('/register', methods=['POST'])
@@ -51,7 +53,7 @@ def register():
         return jsonify({"error": "wallet_address and metadata_url are required"}), 400
 
     resp = mint_nft_from_metadata_url(metadata_url, wallet_address, chain=chain)
-    pprint(resp)
+    #pprint(resp)
     return jsonify(resp), 200
 
 
@@ -72,7 +74,7 @@ def auth_user():
 
     # Default to chain="sepolia" and tokenType="nft721"
     nfts_response = get_wallet_nfts(wallet_address)
-    pprint(nfts_response)
+    #pprint(nfts_response)
 
     # If there's an error or the "nfts" list is empty, handle accordingly
     if "error" in nfts_response:
@@ -109,7 +111,7 @@ def check_status():
         return jsonify({"error": "transaction_id is required"}), 400
 
     resp = check_transaction_status(transaction_id)
-    pprint(resp)
+   # pprint(resp)
     return jsonify(resp), 200
 
 
@@ -192,7 +194,7 @@ def upload_page():
     """
     Handles the upload page and processes file uploads.
     """
-    print("hello")
+    #print("hello")
     if request.method == 'POST':
         if 'file' not in request.files:
             return render_template('upload.html', error="No file part in the request.")
@@ -209,7 +211,7 @@ def upload_page():
 
         try:
             response = store_file_as_metadata(file_path, name=name, description=description)
-            print("hello")
+          #  print("hello")
             # Add success data to pass to the template
             return render_template('upload.html', success=response)
         finally:
@@ -247,6 +249,98 @@ def view_nft_image():
 
     # Step 2: Redirect to the image URL
     return jsonify(metadata)
+
+
+def get_view_nft_data(token_id, contract_address, chain="sepolia"):
+    """
+    Calls Verbwire's getNFTDetails endpoint to retrieve the NFT metadata,
+    then redirects to the 'image' URL in the metadata.
+
+    Query Parameters:
+      - contract_address: NFT contract address
+      - token_id: NFT token ID
+      - chain: Blockchain network (default: "sepolia")
+    """
+
+
+    if not contract_address or not token_id:
+        return jsonify({"error": "Missing contract_address or token_id"}), 400
+
+    # Step 1: Fetch NFT details using the Verbwire helper
+    from utils.verbwire import get_nft_details
+    details = get_nft_details(contract_address, token_id, chain=chain, populate_metadata=True)
+    ipfs_uri = details.get('nft_details').get("tokenURI")
+    ipfs = requests.get(ipfs_uri)
+
+    metadata = details.get("nft_details").get("metadata")
+    if "error" in details:
+        return jsonify({"error": details["error"]}), 400
+
+    # Step 2: Redirect to the image URL
+    return metadata
+
+@app.route('/process_nft_with_llm', methods=['POST'])
+def process_nft_with_llm():
+    """
+    Processes NFT metadata using Cohere's LLM.
+    Expects JSON:
+    {
+      "contract_address": "<NFT contract address>",
+      "token_id": "<NFT token ID>",
+      "chain": "<Blockchain network (default: 'sepolia')>"
+    }
+    Retrieves metadata using /view_nft_image and processes it with Cohere's LLM.
+    """
+
+    data = request.get_json()
+    contract_address = data.get('contract_address')
+    token_id = data.get('token_id')
+    print (contract_address,token_id)
+    chain = data.get("chain", "sepolia")  # Default to "sepolia"
+
+    if not contract_address or not token_id:
+        return jsonify({"error": "Missing contract_address or token_id"}), 400
+
+    try:
+        # Step 1: Retrieve metadata from /view_nft_image
+        view_nft_response = get_view_nft_data(token_id, contract_address, chain=chain)
+
+       
+        pprint(str(view_nft_response))
+
+
+        # Step 2: Validate metadata is JSON
+        #if not isinstance(metadata, dict):
+        #    return jsonify({"error": "Metadata is not in JSON format."}), 400
+
+
+        # Step 3: Process metadata with Cohere
+        co = cohere.Client(os.getenv("COHERE_API_KEY"))
+        prompt = (
+            f"{str(view_nft_response)} Here is the JSON for a person's financial data. "
+            "Provide short feedback to the user about their finances."
+        )
+
+        response = co.generate(
+            model="command-r-plus-08-2024",
+            prompt=prompt,
+            max_tokens=150,
+            temperature=0.7,
+        )
+
+        feedback = response.generations[0].text.strip()
+        print(feedback)
+        # Step 4: Return processed feedback
+        return jsonify({
+            "contract_address": contract_address,
+            "token_id": token_id,
+            "processed_text": feedback
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -21,6 +21,14 @@
                             <a href="{{ url_for('view_nft_image', contract_address=nft.contractAddress, token_id=nft.tokenID, chain='sepolia') }}" target="_blank">
                                 View NFT Image
                             </a>
+                            <button onclick="processNFT('{{ nft.contractAddress }}', '{{ nft.tokenID }}', 'sepolia')">
+                                Analyze NFT Data
+                            </button>
+
+                            <!-- Div to display feedback -->
+                            <div id="feedback-{{ nft.tokenID }}" style="margin-top: 10px; display: none; border: 1px solid #ccc; padding: 10px;">
+                                <p>Processing...</p>
+                            </div>
                         </li>
                     {% endfor %}
                 </ul>
@@ -112,6 +120,42 @@
                 }
             });
         </script>
+ <script>
+    async function processNFT(contractAddress, tokenID, chain = 'sepolia') {
+        const feedbackDiv = document.getElementById(`feedback-${tokenID}`);
+        feedbackDiv.style.display = 'block';
+        feedbackDiv.innerHTML = `<p>Processing NFT data...</p>`;
 
+        try {
+            // Send a POST request to /process_nft_with_llm
+            const response = await fetch('/process_nft_with_llm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contract_address: contractAddress,
+                    token_id: tokenID,
+                    chain: chain,
+                }),
+            });
+
+            const result = await response.json();
+
+            // Display feedback or error
+            if (response.ok) {
+                feedbackDiv.innerHTML = `
+                    <p><strong>Processed Feedback:</strong></p>
+                    <p>${result.processed_text}</p>
+                `;
+            } else {
+                feedbackDiv.innerHTML = `<p>Error: ${result.error || 'Failed to process NFT data.'}</p>`;
+            }
+        } catch (error) {
+            console.error('Error processing NFT data:', error);
+            feedbackDiv.innerHTML = `<p>An error occurred while processing the NFT data. Please try again.</p>`;
+        }
+    }
+</script>
     </body>
 </html>
